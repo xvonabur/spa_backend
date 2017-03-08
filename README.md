@@ -1,0 +1,1 @@
+### SPA. Rails 5 + React. Backend
