@@ -1,0 +1,15 @@
+language: ruby
+rvm:
+  - 2.3.3
+before_install:
+  - gem update --system
+  - gem update bundler
+before_script:
+  - psql -c 'create database spa_backend_ci_test;' -U postgres
+  - cp config/database.travis.yml config/database.yml
+script:
+  - bundle exec rake db:setup
+  - bundle exec rake spec
+cache: bundler
+services:
+  postgresql

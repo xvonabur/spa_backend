@@ -1,0 +1,6 @@
+test:
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  statement_limit: 200
+  database: spa_backend_ci_test
