@@ -13,12 +13,16 @@ gem 'pg', '~> 0.18'
 # Use Puma as the app server
 gem 'puma', '~> 3.0'
 gem 'active_model_serializers', '~> 0.10.0'
+# CORS support
+gem 'rack-cors', require: 'rack/cors'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platform: :mri
   gem 'rspec-rails', '~> 3.5'
   gem 'rubocop', '~> 0.47.1', require: false
+  gem 'rubocop-rspec', '~> 1.13.0', require: false
+  gem 'factory_girl_rails', '~> 4.8'
 end
 
 group :development do
@@ -32,7 +36,6 @@ group :test do
   gem 'database_cleaner', '~> 1.5.3'
   gem 'simplecov'
   gem 'codeclimate-test-reporter', '~> 1.0.0'
-  gem 'factory_girl_rails', '~> 4.8'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

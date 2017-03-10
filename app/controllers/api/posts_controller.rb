@@ -10,7 +10,11 @@ module Api
     end
 
     def show
-      render json: @post
+      if @post.present?
+        render json: @post
+      else
+        render json: {}, status: :not_found
+      end
     end
 
     def create
@@ -32,7 +36,12 @@ module Api
     end
 
     def destroy
-      @post.destroy
+      if @post.present?
+        @post.destroy
+        render json: {}
+      else
+        render json: {}, status: :not_found
+      end
     end
 
     private
@@ -42,7 +51,7 @@ module Api
     end
 
     def set_post
-      @post = Post.find(params[:id])
+      @post = Post.find_by(id: params[:id])
     end
   end
 end
