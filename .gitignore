@@ -35,3 +35,10 @@
 # RVM local config
 .ruby-gemset
 .ruby-version
+
+# SSH keys
+config/provision/keys
+config/provision/playbook.retry
+
+# Environment variables
+.env.production
