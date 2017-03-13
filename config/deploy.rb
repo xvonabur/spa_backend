@@ -4,7 +4,7 @@ lock "3.8.0"
 
 set :application, 'spa_backend'
 set :repo_url, 'git@github.com:xvonabur/spa_backend.git'
-set :branch, 'task7'
+set :branch, 'master'
 set :deploy_to, '/home/deploy/applications/spa_backend'
 
 set :log_level, :info
