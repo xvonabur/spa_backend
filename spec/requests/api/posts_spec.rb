@@ -243,6 +243,10 @@ describe "Posts API" do
       it 'returns empty JSON' do
         expect(json).to eq({})
       end
+
+      it 'really removes post' do
+        expect(Post.find_by(id: post.id)).to eq(nil)
+      end
     end
 
     context 'without existed post' do
