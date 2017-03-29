@@ -16,6 +16,8 @@ gem 'active_model_serializers', '~> 0.10.0'
 # CORS support
 gem 'rack-cors', require: 'rack/cors'
 gem 'dotenv-rails', '~> 2.2.0'
+gem 'sorcery', '~> 0.10.3'
+gem 'knock', '~> 2.1.1'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console

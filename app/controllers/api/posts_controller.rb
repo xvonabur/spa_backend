@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 module Api
   class PostsController < ApplicationController
+    before_action :authenticate_user, only: [:create, :update, :destroy]
     before_action :set_post, only: [:show, :update, :destroy]
+    before_action :unauthorized_check, only: [:update, :destroy]
 
     def index
       @posts = Post.all
@@ -18,7 +20,7 @@ module Api
     end
 
     def create
-      @post = Post.new(post_params)
+      @post = current_user.posts.build(post_params)
 
       if @post.save
         render json: @post, status: :created
@@ -47,11 +49,21 @@ module Api
     private
 
     def post_params
-      params.require(:post).permit(:title, :body, :username)
+      params.require(:post).permit(:title, :body, :user_id)
     end
 
     def set_post
       @post = Post.find_by(id: params[:id])
+    end
+
+    def unauthorized_check
+      if @post.present? && @post.user_id != current_user_id
+        render json: {}, status: :forbidden
+      end
+    end
+
+    def current_user_id
+      current_user.blank? ? nil : current_user.id
     end
   end
 end

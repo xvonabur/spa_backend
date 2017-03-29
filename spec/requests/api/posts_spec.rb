@@ -5,7 +5,8 @@ include ActiveSupport::Testing::TimeHelpers
 describe "Posts API" do
   describe '#index' do
     context 'with 3 posts' do
-      let!(:posts) { FactoryGirl.create_list(:post, 3) }
+      let!(:user) { create(:user) }
+      let!(:posts) { FactoryGirl.create_list(:post, 3, user: user) }
       before { get '/api/posts' }
 
       it 'returns 200 as status code' do
@@ -33,7 +34,9 @@ describe "Posts API" do
   describe '#show' do
     context 'with 1 post' do
       let!(:post) { create(:post) }
-      before { get "/api/posts/#{post.id}" }
+      before do
+        get "/api/posts/#{post.id}"
+      end
 
       it 'returns 200 as status code' do
         expect(response).to be_success
@@ -55,8 +58,8 @@ describe "Posts API" do
         expect(json['data']['attributes']['body']).to eq(post.body)
       end
 
-      it 'returns correct username' do
-        expect(json['data']['attributes']['username']).to eq(post.username)
+      it 'returns correct user-id' do
+        expect(json['data']['attributes']['user-id']).to eq(post.user_id)
       end
 
       it 'returns correct created_at' do
@@ -91,10 +94,12 @@ describe "Posts API" do
 
   describe '#create' do
     context 'with provided attributes' do
+      let(:user) { create(:user) }
       let!(:post_attrs) { FactoryGirl.attributes_for(:post) }
+      let!(:headers) { auth_header_for_user(user.id) }
       before do
         travel_to Time.current
-        post '/api/posts', params: { post: post_attrs }
+        post '/api/posts', headers: headers, params: { post: post_attrs }
       end
 
       after { travel_back }
@@ -119,8 +124,8 @@ describe "Posts API" do
         expect(json['data']['attributes']['body']).to eq(post_attrs[:body])
       end
 
-      it 'returns correct username' do
-        expect(json['data']['attributes']['username']).to eq(post_attrs[:username])
+      it 'returns correct user-id' do
+        expect(json['data']['attributes']['user-id']).to eq(user.id)
       end
 
       it 'returns correct created_at' do
@@ -141,8 +146,10 @@ describe "Posts API" do
     end
 
     context 'with empty title' do
+      let(:user) { create(:user) }
+      let!(:headers) { auth_header_for_user(user.id) }
       before do
-        post '/api/posts', params: { post: { title: nil } }
+        post '/api/posts', headers: headers, params: { post: { title: nil } }
       end
 
       it 'returns 422 as status code' do
@@ -150,22 +157,37 @@ describe "Posts API" do
       end
 
       it 'returns error' do
-        post = build(:post, title: nil)
+        post = build(:post, user: user, title: nil)
         post.validate
 
         expect(json).to eq(post.errors.messages.as_json)
+      end
+    end
+
+    context 'unauthorized' do
+      let!(:post_attrs) { FactoryGirl.attributes_for(:post) }
+      before do
+        post '/api/posts', params: { post: post_attrs }
+      end
+
+      it 'returns 401 as status code' do
+        expect(response.status).to eq(401)
       end
     end
   end
 
   describe '#update' do
     let!(:post) { create(:post) }
+    let!(:headers) { auth_header_for_user(post.user_id) }
 
     context 'with provided attributes' do
-      let!(:new_post_attrs) { FactoryGirl.attributes_for(:post) }
+      let!(:new_post_attrs) do
+        FactoryGirl.attributes_for(:post, user_id: post.user_id)
+      end
       before do
         travel_to Time.current
-        put "/api/posts/#{post.id}", params: { post: new_post_attrs }
+        put "/api/posts/#{post.id}", headers: headers,
+            params: { post: new_post_attrs }
       end
 
       after { travel_back }
@@ -190,10 +212,10 @@ describe "Posts API" do
         expect(json['data']['attributes']['body']).to eq(new_post_attrs[:body])
       end
 
-      it 'returns correct username' do
+      it 'returns correct user-id' do
         expect(
-          json['data']['attributes']['username']
-        ).to eq(new_post_attrs[:username])
+          json['data']['attributes']['user-id']
+        ).to eq(new_post_attrs[:user_id])
       end
 
       it 'returns correct created_at' do
@@ -215,7 +237,8 @@ describe "Posts API" do
 
     context 'with empty title' do
       before do
-        put "/api/posts/#{post.id}", params: { post: { title: nil } }
+        put "/api/posts/#{post.id}", headers: headers,
+            params: { post: { title: nil } }
       end
 
       it 'returns 422 as status code' do
@@ -223,10 +246,21 @@ describe "Posts API" do
       end
 
       it 'returns error' do
-        post = build(:post, title: nil)
-        post.validate
+        new_post = build(:post, user: post.user, title: nil)
+        new_post.validate
 
-        expect(json).to eq(post.errors.messages.as_json)
+        expect(json).to eq(new_post.errors.messages.as_json)
+      end
+    end
+
+    context 'unauthorized' do
+      let!(:new_post_attrs) do
+        FactoryGirl.attributes_for(:post, user_id: post.user_id)
+      end
+      before { put "/api/posts/#{post.id}", params: { post: new_post_attrs } }
+
+      it 'returns 401 as status code' do
+        expect(response.status).to eq(401)
       end
     end
   end
@@ -234,7 +268,8 @@ describe "Posts API" do
   describe '#destroy' do
     context 'with existed post' do
       let!(:post) { create(:post) }
-      before { delete "/api/posts/#{post.id}" }
+      let!(:headers) { auth_header_for_user(post.user_id) }
+      before { delete "/api/posts/#{post.id}", headers: headers }
 
       it 'returns 200 as status code' do
         expect(response.status).to eq(200)
@@ -250,7 +285,9 @@ describe "Posts API" do
     end
 
     context 'without existed post' do
-      before { delete '/api/posts/1' }
+      let!(:user) { create(:user) }
+      let!(:headers) { auth_header_for_user(user.id)  }
+      before { delete '/api/posts/1', headers: headers }
 
       it 'returns 404 as status code' do
         expect(response.status).to eq(404)
@@ -258,6 +295,15 @@ describe "Posts API" do
 
       it 'returns empty JSON' do
         expect(json).to eq({})
+      end
+    end
+
+    context 'unauthorized' do
+      let!(:post) { create(:post) }
+      before { delete "/api/posts/#{post.id}" }
+
+      it 'returns 401 as status code' do
+        expect(response.status).to eq(401)
       end
     end
   end
