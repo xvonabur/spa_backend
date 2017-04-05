@@ -22,7 +22,6 @@ gem 'responders', '~> 2.3.0'
 gem 'kaminari', '~> 1.0.1'
 gem 'pg_search', '~> 2.0.1'
 gem 'carrierwave', '~> 1.0.0'
-gem 'carrierwave-base64', '~> 2.5.0'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
