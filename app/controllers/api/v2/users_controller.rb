@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-module Api
+module Api::V2
   class UsersController < ApplicationController
     def create
       @user = User.new(user_params)
