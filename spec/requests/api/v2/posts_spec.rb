@@ -11,10 +11,6 @@ describe "Posts API v2" do
       let!(:posts) { FactoryGirl.create_list(:post, 3, user: user) }
       before { get '/api/posts', headers: api_header(API_VERSION) }
 
-      it 'returns 200 as status code' do
-        expect(response).to be_success
-      end
-
       it 'returns all posts' do
         expect(json['data'].length).to eq(3)
       end
@@ -26,10 +22,6 @@ describe "Posts API v2" do
       before do
         get '/api/posts', params: { sort_by: :created_at, sort_direction: :desc },
             headers: api_header(API_VERSION)
-      end
-
-      it 'returns 200 as status code' do
-        expect(response).to be_success
       end
 
       it 'returns all posts' do
@@ -51,10 +43,6 @@ describe "Posts API v2" do
             headers: api_header(API_VERSION)
       end
 
-      it 'returns 200 as status code' do
-        expect(response).to be_success
-      end
-
       it 'returns all posts' do
         expect(json['data'].length).to eq(3)
       end
@@ -72,10 +60,6 @@ describe "Posts API v2" do
       before do
         get '/api/posts', params: { search: "#{posts[1].title}" },
             headers: api_header(API_VERSION)
-      end
-
-      it 'returns 200 as status code' do
-        expect(response).to be_success
       end
 
       it 'returns only one post' do
@@ -97,59 +81,40 @@ describe "Posts API v2" do
         expect(json['data'].length).to eq(5)
       end
 
+      it 'returns correct page urls for the first page' do
+        get '/api/posts?page=1', headers: api_header(API_VERSION)
+
+        links_hash(last: 'api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5',
+                   next: 'api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5')
+
+        links_hash['links'].each_key do |key|
+          expect(json['links'][key.to_s]).to include(links_hash[key])
+        end
+      end
+
+      it 'returns correct page urls for the first page' do
+        get '/api/posts?page=2', headers: api_header(API_VERSION)
+
+        links_hash(last: 'api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5',
+                   next: 'api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5',
+                   first: 'api/posts?page%5Bnumber%5D=1&page%5Bsize%5D=5',
+                   prev: 'api/posts?page%5Bnumber%5D=1&page%5Bsize%5D=5',
+                   self: 'api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5')
+
+        links_hash['links'].each_key do |key|
+          expect(json['links'][key.to_s]).to include(links_hash[key])
+        end
+      end
+
       it 'returns only first page posts' do
         get '/api/posts?page=2', headers: api_header(API_VERSION)
 
         expect(json['data'].length).to eq(2)
       end
-
-      it 'returns first page url' do
-        get '/api/posts?page=2', headers: api_header(API_VERSION)
-
-        expect(
-          json['links']['first']
-        ).to include('api/posts?page%5Bnumber%5D=1&page%5Bsize%5D=5')
-      end
-
-      it 'returns last page url' do
-        get '/api/posts?page=1', headers: api_header(API_VERSION)
-
-        expect(
-          json['links']['last']
-        ).to include('api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5')
-      end
-
-      it 'returns next page url' do
-        get '/api/posts?page=1', headers: api_header(API_VERSION)
-
-        expect(
-          json['links']['next']
-        ).to include('api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5')
-      end
-
-      it 'returns next page url' do
-        get '/api/posts?page=2', headers: api_header(API_VERSION)
-
-        expect(
-          json['links']['prev']
-        ).to include('api/posts?page%5Bnumber%5D=1&page%5Bsize%5D=5')
-      end
-
-      it 'returns next page url' do
-        get '/api/posts?page=2', headers: api_header(API_VERSION)
-
-        expect(
-          json['links']['self']
-        ).to include('api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5')
-      end
     end
 
     context 'with empty posts' do
       before { get '/api/posts', headers: api_header(API_VERSION) }
-
-      it 'returns 200 as status code' do
-        expect(response).to be_success
-      end
 
       it 'returns empty array' do
         expect(json['data'].length).to eq(0)
@@ -164,44 +129,8 @@ describe "Posts API v2" do
         get "/api/posts/#{post.id}", headers: api_header(API_VERSION)
       end
 
-      it 'returns 200 as status code' do
-        expect(response).to be_success
-      end
-
-      it 'returns correct id' do
-        expect(json['data']['id']).to eq(post.id.to_s)
-      end
-
-      it 'returns correct type' do
-        expect(json['data']['type']).to eq('posts')
-      end
-
-      it 'returns correct title' do
-        expect(json['data']['attributes']['title']).to eq(post.title)
-      end
-
-      it 'returns correct body' do
-        expect(json['data']['attributes']['body']).to eq(post.body)
-      end
-
-      it 'returns correct user-id' do
-        expect(json['data']['attributes']['user-id']).to eq(post.user_id)
-      end
-
-      it 'returns correct created_at' do
-        expect(
-          json['data']['attributes']['created-at']
-        ).to eq(json_api_date(post.created_at))
-      end
-
-      it 'returns correct updated_at' do
-        expect(
-          json['data']['attributes']['updated-at']
-        ).to eq(json_api_date(post.updated_at))
-      end
-
-      it 'returns correct link' do
-        expect(json['data']['links']['self']).to eq("/api/posts/#{post.id}")
+      it 'returns correct data' do
+        expect(json['data']).to eq(post_v2_hash(post))
       end
 
       context 'with no posts' do
@@ -234,40 +163,8 @@ describe "Posts API v2" do
         expect(response.status).to eq(201)
       end
 
-      it 'returns correct id' do
-        expect(json['data']['id'].to_i).to be > 0
-      end
-
-      it 'returns correct type' do
-        expect(json['data']['type']).to eq('posts')
-      end
-
-      it 'returns correct title' do
-        expect(json['data']['attributes']['title']).to eq(post_attrs[:title])
-      end
-
-      it 'returns correct body' do
-        expect(json['data']['attributes']['body']).to eq(post_attrs[:body])
-      end
-
-      it 'returns correct user-id' do
-        expect(json['data']['attributes']['user-id']).to eq(user.id)
-      end
-
-      it 'returns correct created_at' do
-        expect(
-          json['data']['attributes']['created-at']
-        ).to eq(json_api_date(Time.current))
-      end
-
-      it 'returns correct updated_at' do
-        expect(
-          json['data']['attributes']['updated-at']
-        ).to eq(json_api_date(Time.current))
-      end
-
-      it 'returns correct link' do
-        expect(json['data']['links']['self']).to match("/api/posts/")
+      it 'returns correct data' do
+        expect(json['data']).to eq(post_v2_hash(Post.last))
       end
     end
 
@@ -286,15 +183,8 @@ describe "Posts API v2" do
         expect(response.status).to eq(201)
       end
 
-      it 'returns correct id' do
-        expect(json['data']['id'].to_i).to be > 0
-      end
-
-      it 'returns correct image link' do
-        resp_url = json['data']['attributes']['image']['url']
-        extected_url = "/uploads/test/post/image/#{json['data']['id']}/bat-logo.png"
-
-        expect(resp_url).to eq(extected_url)
+      it 'returns correct data' do
+        expect(json['data']).to eq(post_v2_hash(Post.last))
       end
     end
 
@@ -338,60 +228,15 @@ describe "Posts API v2" do
         FactoryGirl.attributes_for(:post_with_jpeg_image, user_id: post.user_id)
       end
       before do
-        travel_to Time.current
         put "/api/posts/#{post.id}", headers: headers,
             params: { post: new_post_attrs }
       end
 
-      after { travel_back }
+      before(:all) { travel_to Time.current }
+      after(:all) { travel_back }
 
-      it 'returns 200 as status code' do
-        expect(response.status).to eq(200)
-      end
-
-      it 'returns correct id' do
-        expect(json['data']['id'].to_i).to be > 0
-      end
-
-      it 'returns correct type' do
-        expect(json['data']['type']).to eq('posts')
-      end
-
-      it 'returns correct title' do
-        expect(json['data']['attributes']['title']).to eq(new_post_attrs[:title])
-      end
-
-      it 'returns correct body' do
-        expect(json['data']['attributes']['body']).to eq(new_post_attrs[:body])
-      end
-
-      it 'returns correct user-id' do
-        expect(
-          json['data']['attributes']['user-id']
-        ).to eq(new_post_attrs[:user_id])
-      end
-
-      it 'returns correct created_at' do
-        expect(
-          json['data']['attributes']['created-at']
-        ).to eq(json_api_date(post.created_at))
-      end
-
-      it 'returns correct updated_at' do
-        expect(
-          json['data']['attributes']['updated-at']
-        ).to eq(json_api_date(Time.current))
-      end
-
-      it 'returns correct link' do
-        expect(json['data']['links']['self']).to eq("/api/posts/#{post.id}")
-      end
-
-      it 'returns correct image link' do
-        resp_url = json['data']['attributes']['image']['url']
-        extected_url = "/uploads/test/post/image/#{json['data']['id']}/bat-logo.jpeg"
-
-        expect(resp_url).to eq(extected_url)
+      it 'returns correct data' do
+        expect(json['data']).to eq(post_v2_hash(post, new_post_attrs))
       end
     end
 
@@ -467,4 +312,38 @@ describe "Posts API v2" do
       end
     end
   end
+end
+
+def post_v2_hash(post, new_attrs = {})
+  {
+    'id' => post.id.to_s,
+    'type' => 'posts',
+    'attributes' => {
+      'title' => new_attrs[:title].blank? ? post.title : new_attrs[:title].to_s,
+      'body' => new_attrs[:body].blank? ? post.body : new_attrs[:body].to_s,
+      'image' => {
+        'url' => new_attrs[:image].blank? ? post.image.url : image_link(post, new_attrs[:image])
+      },
+      'user-id' => new_attrs[:user_id].blank? ? post.user_id : new_attrs[:user_id].to_i,
+      'created-at' => json_api_date(post.created_at),
+      'updated-at' => json_api_date(post.updated_at)
+    },
+    'links' => {
+      'self' => "/api/posts/#{post.id}"
+    }
+  }
+end
+
+def links_hash(attrs = {})
+  hash = {
+    'links' => {}
+  }
+  attrs.keys.each do |key|
+    hash['links'][key.to_s] = attrs[key.to_sym]
+  end
+  hash
+end
+
+def image_link(post, image)
+  "/uploads/test/post/image/#{post.id}/#{image.original_filename}"
 end

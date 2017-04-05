@@ -2,7 +2,6 @@
 module Responders
   module SerializedResponder
     def initialize(controller, resources, options = {})
-      puts "Called initializzzzz"
       super
       serializer = (
         controller.class.name.gsub('Controller', '').singularize + 'Serializer'

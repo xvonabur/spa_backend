@@ -9,10 +9,6 @@ describe "Posts API" do
       let!(:posts) { FactoryGirl.create_list(:post, 3, user: user) }
       before { get '/api/posts' }
 
-      it 'returns 200 as status code' do
-        expect(response).to be_success
-      end
-
       it 'returns all posts' do
         expect(json['data'].length).to eq(3)
       end
@@ -20,10 +16,6 @@ describe "Posts API" do
 
     context 'with empty posts' do
       before { get '/api/posts' }
-
-      it 'returns 200 as status code' do
-        expect(response).to be_success
-      end
 
       it 'returns empty array' do
         expect(json['data'].length).to eq(0)
@@ -38,44 +30,8 @@ describe "Posts API" do
         get "/api/posts/#{post.id}"
       end
 
-      it 'returns 200 as status code' do
-        expect(response).to be_success
-      end
-
-      it 'returns correct id' do
-        expect(json['data']['id']).to eq(post.id.to_s)
-      end
-
-      it 'returns correct type' do
-        expect(json['data']['type']).to eq('posts')
-      end
-
-      it 'returns correct title' do
-        expect(json['data']['attributes']['title']).to eq(post.title)
-      end
-
-      it 'returns correct body' do
-        expect(json['data']['attributes']['body']).to eq(post.body)
-      end
-
-      it 'returns correct user-id' do
-        expect(json['data']['attributes']['user-id']).to eq(post.user_id)
-      end
-
-      it 'returns correct created_at' do
-        expect(
-          json['data']['attributes']['created-at']
-        ).to eq(json_api_date(post.created_at))
-      end
-
-      it 'returns correct updated_at' do
-        expect(
-          json['data']['attributes']['updated-at']
-        ).to eq(json_api_date(post.updated_at))
-      end
-
-      it 'returns correct link' do
-        expect(json['data']['links']['self']).to eq("/api/posts/#{post.id}")
+      it 'returns correct data' do
+        expect(json['data']).to eq(post_v1_hash(post))
       end
 
       context 'with no posts' do
@@ -108,40 +64,8 @@ describe "Posts API" do
         expect(response.status).to eq(201)
       end
 
-      it 'returns correct id' do
-        expect(json['data']['id'].to_i).to be > 0
-      end
-
-      it 'returns correct type' do
-        expect(json['data']['type']).to eq('posts')
-      end
-
-      it 'returns correct title' do
-        expect(json['data']['attributes']['title']).to eq(post_attrs[:title])
-      end
-
-      it 'returns correct body' do
-        expect(json['data']['attributes']['body']).to eq(post_attrs[:body])
-      end
-
-      it 'returns correct user-id' do
-        expect(json['data']['attributes']['user-id']).to eq(user.id)
-      end
-
-      it 'returns correct created_at' do
-        expect(
-          json['data']['attributes']['created-at']
-        ).to eq(json_api_date(Time.current))
-      end
-
-      it 'returns correct updated_at' do
-        expect(
-          json['data']['attributes']['updated-at']
-        ).to eq(json_api_date(Time.current))
-      end
-
-      it 'returns correct link' do
-        expect(json['data']['links']['self']).to match("/api/posts/")
+      it 'returns correct data' do
+        expect(json['data']).to eq(post_v1_hash(Post.last))
       end
     end
 
@@ -192,46 +116,8 @@ describe "Posts API" do
 
       after { travel_back }
 
-      it 'returns 200 as status code' do
-        expect(response.status).to eq(200)
-      end
-
-      it 'returns correct id' do
-        expect(json['data']['id'].to_i).to be > 0
-      end
-
-      it 'returns correct type' do
-        expect(json['data']['type']).to eq('posts')
-      end
-
-      it 'returns correct title' do
-        expect(json['data']['attributes']['title']).to eq(new_post_attrs[:title])
-      end
-
-      it 'returns correct body' do
-        expect(json['data']['attributes']['body']).to eq(new_post_attrs[:body])
-      end
-
-      it 'returns correct user-id' do
-        expect(
-          json['data']['attributes']['user-id']
-        ).to eq(new_post_attrs[:user_id])
-      end
-
-      it 'returns correct created_at' do
-        expect(
-          json['data']['attributes']['created-at']
-        ).to eq(json_api_date(post.created_at))
-      end
-
-      it 'returns correct updated_at' do
-        expect(
-          json['data']['attributes']['updated-at']
-        ).to eq(json_api_date(Time.current))
-      end
-
-      it 'returns correct link' do
-        expect(json['data']['links']['self']).to eq("/api/posts/#{post.id}")
+      it 'returns correct data' do
+        expect(json['data']).to eq(post_v1_hash(Post.last, new_post_attrs))
       end
     end
 
@@ -271,10 +157,6 @@ describe "Posts API" do
       let!(:headers) { auth_header_for_user(post.user_id) }
       before { delete "/api/posts/#{post.id}", headers: headers }
 
-      it 'returns 200 as status code' do
-        expect(response.status).to eq(200)
-      end
-
       it 'returns empty JSON' do
         expect(json).to eq({})
       end
@@ -307,4 +189,21 @@ describe "Posts API" do
       end
     end
   end
+end
+
+def post_v1_hash(post, new_attrs = {})
+  {
+    'id' => post.id.to_s,
+    'type' => 'posts',
+    'attributes' => {
+      'title' => new_attrs[:title].blank? ? post.title : new_attrs[:title].to_s,
+      'body' => new_attrs[:body].blank? ? post.body : new_attrs[:body].to_s,
+      'user-id' => new_attrs[:user_id].blank? ? post.user_id : new_attrs[:user_id].to_i,
+      'created-at' => json_api_date(post.created_at),
+      'updated-at' => json_api_date(post.updated_at)
+    },
+    'links' => {
+      'self' => "/api/posts/#{post.id}"
+    }
+  }
 end
