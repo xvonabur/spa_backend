@@ -1,12 +1,12 @@
 # frozen_string_literal: true
-module Api
+module Api::V2
   class PostsController < ApplicationController
     before_action :authenticate_user, only: [:create, :update, :destroy]
     before_action :set_post, only: [:show, :update, :destroy]
     before_action :unauthorized_check, only: [:update, :destroy]
 
     def index
-      @posts = Post.all
+      @posts = posts_to_show.page params[:page]
 
       render json: @posts
     end
@@ -49,7 +49,7 @@ module Api
     private
 
     def post_params
-      params.require(:post).permit(:title, :body, :user_id)
+      params.require(:post).permit(:title, :body, :user_id, :image)
     end
 
     def set_post
@@ -64,6 +64,11 @@ module Api
 
     def current_user_id
       current_user.blank? ? nil : current_user.id
+    end
+
+    def posts_to_show
+      Post.filter_by_title(params[:search])
+        .sorted_by(params[:sort_by], params[:sort_direction])
     end
   end
 end
