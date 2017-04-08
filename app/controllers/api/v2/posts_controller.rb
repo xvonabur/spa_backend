@@ -6,7 +6,9 @@ module Api::V2
     before_action :unauthorized_check, only: [:update, :destroy]
 
     def index
-      @posts = posts_to_show.page params[:page]
+      page_number = params[:page].present? ? params[:page][:number] : nil
+      page_size = params[:page].present? ? params[:page][:size] : nil
+      @posts = posts_to_show.page(page_number).per(page_size)
 
       render json: @posts
     end

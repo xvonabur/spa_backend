@@ -82,7 +82,7 @@ describe "Posts API v2" do
       end
 
       it 'returns correct page urls for the first page' do
-        get '/api/posts?page=1', headers: api_header(API_VERSION)
+        get '/api/posts?page[number]=1', headers: api_header(API_VERSION)
 
         links_hash(last: 'api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5',
                    next: 'api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5')
@@ -93,7 +93,7 @@ describe "Posts API v2" do
       end
 
       it 'returns correct page urls for the first page' do
-        get '/api/posts?page=2', headers: api_header(API_VERSION)
+        get '/api/posts?page[number]=2', headers: api_header(API_VERSION)
 
         links_hash(last: 'api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5',
                    next: 'api/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5',
@@ -107,7 +107,7 @@ describe "Posts API v2" do
       end
 
       it 'returns only first page posts' do
-        get '/api/posts?page=2', headers: api_header(API_VERSION)
+        get '/api/posts?page[number]=2', headers: api_header(API_VERSION)
 
         expect(json['data'].length).to eq(2)
       end
