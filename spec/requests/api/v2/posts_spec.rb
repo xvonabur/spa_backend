@@ -14,6 +14,10 @@ describe "Posts API v2" do
       it 'returns all posts' do
         expect(json['data'].length).to eq(3)
       end
+
+      it 'returns correct meta' do
+        expect(json['meta']['total']).to eq(3)
+      end
     end
 
     context 'with 3 sorted desc posts' do
@@ -26,6 +30,10 @@ describe "Posts API v2" do
 
       it 'returns all posts' do
         expect(json['data'].length).to eq(3)
+      end
+
+      it 'returns correct meta' do
+        expect(json['meta']['total']).to eq(3)
       end
 
       it 'returns right ordered posts' do
@@ -47,6 +55,10 @@ describe "Posts API v2" do
         expect(json['data'].length).to eq(3)
       end
 
+      it 'returns correct meta' do
+        expect(json['meta']['total']).to eq(3)
+      end
+
       it 'returns right ordered posts' do
         expect(
           json['data'].first['id'].to_i
@@ -66,6 +78,10 @@ describe "Posts API v2" do
         expect(json['data'].length).to eq(1)
       end
 
+      it 'returns correct meta' do
+        expect(json['meta']['total']).to eq(1)
+      end
+
       it 'returns correct post' do
         expect(json['data'].first['id'].to_i).to eq(posts[1].id)
       end
@@ -74,6 +90,12 @@ describe "Posts API v2" do
     context 'with 7 posts and default pagination settings' do
       let!(:user) { create(:user) }
       let!(:posts) { FactoryGirl.create_list(:post, 7, user: user) }
+
+      it 'returns correct meta' do
+        get '/api/posts', headers: api_header(API_VERSION)
+
+        expect(json['meta']['total']).to eq(7)
+      end
 
       it 'returns only first page posts' do
         get '/api/posts', headers: api_header(API_VERSION)
@@ -115,6 +137,10 @@ describe "Posts API v2" do
 
     context 'with empty posts' do
       before { get '/api/posts', headers: api_header(API_VERSION) }
+
+      it 'returns correct meta' do
+        expect(json['meta']['total']).to eq(0)
+      end
 
       it 'returns empty array' do
         expect(json['data'].length).to eq(0)

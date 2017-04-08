@@ -10,7 +10,7 @@ module Api::V2
       page_size = params[:page].present? ? params[:page][:size] : nil
       @posts = posts_to_show.page(page_number).per(page_size)
 
-      render json: @posts
+      render json: @posts, meta: { total: posts_to_show.count }
     end
 
     def show
