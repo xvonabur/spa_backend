@@ -56,7 +56,7 @@ describe "Posts API v2" do
       end
 
       it 'returns correct meta' do
-        expect(json['meta']['total']).to eq(3)
+        expect(json['meta']).to eq({ 'total' => 3, 'limit' => 5 })
       end
 
       it 'returns right ordered posts' do

@@ -6,11 +6,9 @@ module Api::V2
     before_action :unauthorized_check, only: [:update, :destroy]
 
     def index
-      page_number = params[:page].present? ? params[:page][:number] : nil
-      page_size = params[:page].present? ? params[:page][:size] : nil
       @posts = posts_to_show.page(page_number).per(page_size)
 
-      render json: @posts, meta: { total: posts_to_show.count }
+      render json: @posts, meta: { total: posts_to_show.count, limit: page_size }
     end
 
     def show
@@ -71,6 +69,16 @@ module Api::V2
     def posts_to_show
       Post.filter_by_title(params[:search])
         .sorted_by(params[:sort_by], params[:sort_direction])
+    end
+
+    def page_number
+      return nil if params[:page].blank? || params[:page][:number].blank?
+      params[:page][:number]
+    end
+
+    def page_size
+      return Post.default_per_page if params[:page].blank? || params[:page][:size].blank?
+      params[:page][:size]
     end
   end
 end
