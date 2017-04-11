@@ -41,6 +41,7 @@ config/provision/keys
 config/provision/playbook.retry
 
 # Environment variables
+.env
 .env.production
 public/*
 !public/favicon.ico
