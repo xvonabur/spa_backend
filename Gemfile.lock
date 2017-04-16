@@ -213,6 +213,8 @@ GEM
     rubocop-rspec (1.13.0)
       rubocop (>= 0.42.0)
     ruby-progressbar (1.8.1)
+    russian (0.6.0)
+      i18n (>= 0.5.0)
     simplecov (0.13.0)
       docile (~> 1.1.0)
       json (>= 1.8, < 3)
@@ -274,6 +276,7 @@ DEPENDENCIES
   rspec-rails (~> 3.5)
   rubocop (~> 0.47.1)
   rubocop-rspec (~> 1.13.0)
+  russian (~> 0.6.0)
   simplecov
   sorcery (~> 0.10.3)
   spring

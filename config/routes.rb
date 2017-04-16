@@ -8,7 +8,7 @@ Rails.application.routes.draw do
       resources :posts do
         get 'page/:page', action: :index, on: :collection
       end
-      resources :users, only: :create
+      resources :users, only: [:create, :show, :update]
     end
 
     scope module: :v1, constraints: ApiConstraints.new(version: 1, default: :true) do
